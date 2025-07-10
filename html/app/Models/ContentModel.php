@@ -16,7 +16,8 @@ class ContentModel extends Model
         }
     }
     protected $table = 'content';
-    protected $fillable = ['user_nickname','content','created_at'];
+    protected $primaryKey = 'id';
+    protected $fillable = ['user_nickname','content','create','created_at'];
     protected $dataFormat = 'Y-m-d';
     const UPDATED_AT =null;
 }

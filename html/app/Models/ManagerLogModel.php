@@ -9,5 +9,7 @@ class managerLogModel extends Model
 {
     use HasFactory;
     protected $table = 'manager_log';
-    protected $fillable = ['account','action','dataNum'];
+    protected $primaryKey = 'id';
+    protected $fillable = ['account','action_type','action'];
+    public $timestamps = true;
 }

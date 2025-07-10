@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ManagerModel;
 use App\Models\ManagerLogModel;
+use App\Http\Repositories\ManagerRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
