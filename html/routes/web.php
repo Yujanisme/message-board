@@ -22,24 +22,26 @@ Route::get('/welcome', function () {
 
 Route::prefix('message')->group(function () {
     //前端留言板
-    Route::get('/', [MessageController::class, 'index'])->name('message.view');
-    Route::get('/lists', [MessageController::class, 'lists']);
-    Route::post('/create',[MessageController::class,'create'])->name('message.create');    
+    Route::get('/', [MessageController::class, 'index'])->name('message.view'); // 留言板
+    Route::get('/lists', [MessageController::class, 'messageList'])->name('message.list'); // 全部留言列表
+    Route::post('/create',[MessageController::class,'create'])->name('message.create'); // 新增留言
     
     //管理員頁面
-    Route::get('/manager',[ManagerController::class,'managerView'])->name('manager.view');
-    Route::get('/managerList',[ManagerController::class,'managerData']);
+    Route::get('/managerList',[ManagerController::class,'managerList'])->name('manager.list');
     Route::post('/addManager',[ManagerController::class,'addManager'])->name('manager.add');
-    Route::post('/deleteManager',[ManagerController::class,'delete']);
+    Route::post('/deleteManager/{id}',[ManagerController::class,'delete'])->name('manager.delete');
+    Route::get('/updatePasswordView/{id}',[ManagerController::class,'updatePasswordView'])->name('manager.updatePasswordView');
+    Route::post('/updatePassword/{id}',[ManagerController::class,'updatePassword'])->name('manager.updatePassword');
+    
     //後端管理頁面
-    Route::get('/content', [MessageController::class,'contentView'])->name('content.view');
-    Route::post('/select',[MessageController::class,'select'])->name('content.select');
-    Route::post('/reply',[MessageController::class,'reply']);
-    Route::post('/edit',[MessageController::class,'edit_reply']);
-    Route::post('/delete',[MessageController::class,'delete']);
+    Route::get('/content', [MessageController::class,'contentView'])->name('message.contentView');
+    Route::post('/query',[MessageController::class,'query'])->name('message.query');
+    Route::post('/reply',[MessageController::class,'reply'])->name('message.reply');
+    Route::post('/deleteMessage/{id}',[MessageController::class,'delete'])->name('message.delete');
+    
     //登入頁面
-    Route::get('/loginForm',[ManagerController ::class,'loginForm']);
+    Route::get('/loginForm',[ManagerController ::class,'loginForm'])->name('login.view');
     Route::post('/login',[ManagerController::class,'login'])->name('login.submit');
-    Route::get('/logout',[ManagerController ::class,'logout']);
+    Route::get('/logout',[ManagerController ::class,'logout'])->name('logout');
     Route::get('/checkSession',[ManagerController::class,'checkSession']);
 });

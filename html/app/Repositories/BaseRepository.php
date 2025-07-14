@@ -12,8 +12,6 @@ abstract class BaseRepository
 
     /**
      * BaseRepository constructor.
-     *
-     * @param Model $model
      */
     public function __construct(Model $model)
     {
@@ -37,17 +35,41 @@ abstract class BaseRepository
      */
     public function getById($id)
     {
-        return $this->model->find($id)->get();
+        return $this->model->where('id',$id)->first();
     }
 
     /**
      * Get By Where.
      * @param  array  $where
      */
-    public function getByWhere(string $where){
+    public function getByWhere(array $where)
+    {
         return $this->model->where($where)->get();
     }
 
+    /**
+     * Get By first
+     */
+    public function getByFirst(array $where)
+    {
+        return $this->model->where($where)->first();
+    }
+    /**
+     * get between where.
+     */
+    public function getBetweenWhere(string $column, $start, $end, array $where)
+    {
+        return $this->model->whereBetween($column, [$start, $end])->where($where)->get();
+    }
+
+    /**
+     * get by multiple where.
+     */
+    public function getByMultipleWhere(array $where)
+    {
+        return $this->model->where($where)->get();
+    }
+    
     /**
      * Create
      *
@@ -64,12 +86,17 @@ abstract class BaseRepository
      *
      * @param  int    $id
      */
-    public function updateById($id)
+    public function updateById($id,array $value)
     {
-        $result = $this->find($id);
-        if ($result) {
-            return $result->update($attributes);
-        }
+        return $this->model->where('id',$id)->update($value);
+    }
+
+    /**
+     * Update by where.
+     */
+    public function updateByWhere(array $where, array $value)
+    {
+        return $this->model->where($where)->update($value);
     }
 
     /**
@@ -79,7 +106,7 @@ abstract class BaseRepository
      */
     public function deleteById($id)
     {
-        $result = $this->find($id);
+        $result = $this->model->find($id);
         if ($result) {
             return $result->delete();
         }
