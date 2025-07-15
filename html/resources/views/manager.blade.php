@@ -18,10 +18,13 @@
     <body>
         <h1>管理員列表</h1>
         <div>
-            <p style="display:inline-block">目前登入管理員：</p>
-            <p style="display:inline-block" id="managerName"></p>
+            <p style="display:inline-block">目前登入管理員：{{ Auth::user()->manager_name }}</p>
+            <form id="logout" method="POST" action="{{ route('logout') }}" style="display: inline-block; margin-left: 20px;">
+                @csrf
+                <button class="btn btn-outline-primary" type="submit">登出</button>
+            </form>
             <br>
-            <button class="btn btn-secondary" onclick="location.href = '/message/content';">查看所有留言</button>
+            <button class="btn btn-secondary" onclick="location.href = '{{ route('message.contentView') }}';">查看所有留言</button>
         </div>
        
         <div id="manager" style="text-align: center;">
@@ -108,30 +111,3 @@
         myModal.show();
     </script>
 @endif
-<script>
-    window.onload = function(){
-        // checklogin();
-    }
-
-    //檢查登入狀態
-    // function checklogin(){
-    //     $.getJSON('checkSession',function(data){
-    //         if(data.isLogin == true){
-    //             $('#managerName').text(data.auth.manager_name);
-    //         }
-    //         else{
-    //             window.location.assign('/message/loginForm');
-    //         }
-    //     })
-    // }
-
-    //刪除管理員
-    // $('.delete-btn').on('click', function() {
-    //     let manager_id = $(this).data('id');
-    //     let deleteUrl = 'deleteManager/' + manager_id;
-    //     $.ajax({
-    //         url:deleteUrl,
-    //         method:'POST',
-    //     })
-    // }) 
-</script>

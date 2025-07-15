@@ -41,8 +41,11 @@
     <body>
         <div id="manager" name="manager">
             <h3 style="display: inline-block;">管理者:</h3>
-            <p id="managerName" ></p>
-            <button class="btn btn-outline-primary" id="logout" onclick="logout()">登出</button>
+            <p id="managerName" >{{ Auth::user()->manager_name }}</p>
+            <form id="logout" method="POST" action="{{ route('logout') }}" style="display: inline-block; margin-left: 20px;">
+                @csrf
+                <button class="btn btn-outline-primary" type="submit">登出</button>
+            </form>
             <br>
             <button class="btn btn-secondary" onclick="location.href = '{{ route('manager.list') }}';">管理員列表</button>
         </div>
@@ -147,17 +150,6 @@
 
 
 <script>
-    // function checklogin(){
-    //     $.getJSON('checkSession',function(data){
-    //         if(data.isLogin == true){
-    //             $('#managerName').text(data.auth.manager_name);
-    //         }
-    //         else{
-    //             window.location.assign('/message/loginForm');
-    //         }
-    //     })
-    // }
-
     // 回覆、編輯回覆資料
     $('.modal').on('show.bs.modal', function (event) {
         let dataInfo = $(event.relatedTarget).data('info');

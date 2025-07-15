@@ -51,6 +51,7 @@ class ManagerController extends Controller
         }
         return view('updatePassword', compact('manager'));
     }
+    
     //管理員頁面 更新密碼
     public function updatePassword(Request $request, $id){
         $request->validate([
@@ -95,34 +96,23 @@ class ManagerController extends Controller
             'signin_account'=>'required',
             'signin_password'=>'required'
         ]);
-        $user = ManagerModel::where('account',$request->signin_account)->first();
-        if($user){
-            return redirect()->route('manager.view')->with('success','登入成功');
+        // $user = ManagerModel::where('account',$request->signin_account)->first();
+
+        if(Auth::attempt(['account'=>$request->signin_account,'password'=>$request->signin_password])){
+            $request->session()->regenerate(); //要 regenerate才會存到auth
+            session()->put('user',['userID'=>$request->id,'userAccount'=>$request->account,'userName'=>$request->manager_name]);
+         
+            // $this->addLog(Auth::user()->account,'帳號登入',-1);
+            return redirect()->route('message.contentView')->with('success','登入成功');
         }
-        // if(Auth::attempt(['account'=>$request->signin_account,'password'=>$request->signin_password])){
-        //     $request->session()->regenerate();//要 regenerate才會存到auth
-        //     session()->put('user',['userID'=>$user->manager_id,'userAccount'=>$user->account,'userName'=>$user->manager_name]);
-        //     $this->addLog(Auth::user()->account,'帳號登入',-1);
-        //     return redirect('/message/content')->with('success','登入成功');
-        // }
-        // return back()->withErrors(['login' => '帳號或密碼錯誤']);
+        return back()->withErrors(['login' => '帳號或密碼錯誤']);
     }
 
     //登出
     public function logout(){
-        $this->addLog(Auth::user()->account,'帳號登出',-1);
+        // $this->addLog(Auth::user()->account,'帳號登出',-1);
         Auth::logout();
-        return redirect('/message/loginForm')->with('success','已登出');
-    }
-
-    //檢查登入狀態
-    public function checkSession(){
-        if(Auth::check()){
-             return response()->json([
-                'isLogin'=>session()->has('user'),
-                'auth'=>Auth::user()
-            ]);
-        }
+        return redirect('/')->with('success','已登出');
     }
 
     //管理員操作
