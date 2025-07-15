@@ -17,6 +17,12 @@
             <label>密碼</label>
             <input type="password" name="signin_password" placeholder="請輸入密碼" style="font-size: 20px;">
             <br>
+            @if ($errors->any())
+                <div class="alert alert-danger" role="alert">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+            <br>
             <input class="btn btn-primary" type="submit" name="signin" value="登入">
         </form>
     </body>
