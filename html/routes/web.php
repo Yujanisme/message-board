@@ -22,6 +22,7 @@ Route::post('/logout', [ManagerController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->prefix('manager')->group(function () {
     //管理員頁面
+    Route::get('/', [ManagerController::class, 'manager'])->name('manager.view');
     Route::get('/managerList',[ManagerController::class,'managerList'])->name('manager.list');
     Route::post('/addManager',[ManagerController::class,'addManager'])->name('manager.add');
     Route::post('/deleteManager/{id}',[ManagerController::class,'delete'])->name('manager.delete');

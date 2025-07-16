@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\Paginator;
+use Yajra\DataTables\Facades\DataTables;
 
 class MessageController extends Controller
 {
@@ -26,15 +27,30 @@ class MessageController extends Controller
     //前台畫面
     public function index()
     {
-        return view('message');
+        $message = $this->messageRepository->all(); // 取得所有留言並按時間排序
+        return view('message', ['messages' => $message]);
     }
 
     //顯示所有留言
     public function messageList()
     {
-        $contents = MessageModel::orderBy('id','DESC')->paginate(10);     //把all content 轉成 array
-
-        return response()->json($contents);
+        $dataTable = DataTables::of(MessageModel::query())
+                        ->addColumn('action', function ($row) {
+                            $id = $row->id;
+                            
+                            if(is_null($row->reply)){
+                                $replyButton = '<button class="btn btn-primary reply" data-bs-toggle="modal" data-bs-target="#replyModal" data-id="'.$row->id.'" data-user-nickname="'.$row->user_nickname.'" data-content="'.$row->content.'" data-reply="'.$row->reply.'">回覆</button>';
+                            } else {
+                                $replyButton = '<button class="btn btn-primary reply" data-bs-toggle="modal" data-bs-target="#replyModal" data-id="'.$row->id.'" data-user-nickname="'.$row->user_nickname.'" data-content="'.$row->content.'" data-reply="'.$row->reply.'">編輯回覆</button>';
+                            }
+                            $buttons = <<<HTML
+                                    {$replyButton}
+                                    <button class="btn btn-danger delete-btn" data-id="{$id}">刪除</button>
+                            HTML;
+                            return $buttons;
+                        })
+                        ->rawColumns(['action']);
+         return $dataTable->make(true);
     }
 
     //新增留言

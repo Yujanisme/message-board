@@ -8,6 +8,7 @@ use App\Repositories\ManagerRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\Facades\DataTables;
 
 class ManagerController extends Controller
 {   
@@ -20,10 +21,27 @@ class ManagerController extends Controller
     {
         $this->managerRepository = $managerRepository;
     }
+    //後端管理頁面
+    public function manager()
+    {
+       return view('manager');
+    }
     //管理員頁面 列表
-    public function managerList(){
-        $manager = $this->managerRepository->all();
-        return view('manager', ['managers' => $manager]);
+    public function managerList()
+    {
+        $dataTable = DataTables::of(ManagerModel::query())
+                        ->addColumn('action', function ($row) {
+                            $id = $row->id;
+                            $updateUrl = route('manager.updatePasswordView', ['id' => $id]);
+                            $buttons = <<<HTML
+                                    <button class="btn btn-danger delete-btn" data-id="{$id}">刪除</button>
+                                    <a class="btn btn-info" href="{$updateUrl}">更改密碼</a>
+                            HTML;
+                            return $buttons;
+                        })
+                        ->rawColumns(['action']);
+
+        return $dataTable->make(true);
     }
     
     //管理員頁面 新增
@@ -40,7 +58,7 @@ class ManagerController extends Controller
 
         $this->managerRepository->createManager($data);
         // $this->addLog($user['userAccount'],'新增管理員',$newID);
-        return redirect()->route('manager.list')->with('success', '資料管理員成功！');
+        return redirect()->route('manager.view')->with('success', '資料管理員成功！');
     }
 
     //管理員頁面 修改密碼
@@ -67,7 +85,7 @@ class ManagerController extends Controller
             return redirect()->back()->withErrors(['old_password' => '舊密碼不正確']);
         }
         $this->managerRepository->updateManager($id, $request->only('new_password'));
-        return redirect()->route('manager.list')->with('success', '更改密碼成功！');
+        return redirect()->route('manager.view')->with('success', '更改密碼成功！');
     }
 
     //管理員頁面 刪除
@@ -83,7 +101,7 @@ class ManagerController extends Controller
         //     return response()->json(['error' => '找不到該內容'], 404);
         // }
         $this->managerRepository->deleteManager($managerID);
-        return redirect()->route('manager.list')->with('success', '管理員已刪除');
+        return redirect()->route('manager.view')->with('success', '管理員已刪除');
     }
 
     //登入
