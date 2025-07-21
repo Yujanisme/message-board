@@ -10,15 +10,15 @@ class managerLogController extends Controller
 {
     public function addLog(Request $request){
         $request->validate([
-            'account'=>'require',
-            'action'=>'require',
-            'dataNum'=>'Nullable'
+            'account' => 'require',
+            'action_type' => 'require',
+            'action' => 'require',
         ]);
 
         managerLogModel::create([
             'account'=>$request->account,
-            'action'=>$request->action,
-            'dataNum'=>$request->dataNum
+            'action_type'=>$request->action,
+            'action'=>$request->action
         ]);
     }
 }

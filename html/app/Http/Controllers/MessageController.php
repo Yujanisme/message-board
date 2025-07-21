@@ -2,130 +2,130 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ContentModel;
+use App\Models\MessageModel;
 use App\Models\ManagerLogModel;
+use App\Repositories\MessageRepository;
+use App\Repositories\ManagerLogRepository;
 use COM;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\Paginator;
+use Yajra\DataTables\Facades\DataTables;
 
 class MessageController extends Controller
 {
+    /**
+     * @var MessageRepository
+     */
+    protected $messageRepository;
+    
+    /**
+     * ManagerLogRepository
+     */
+    protected $managerLogRepository;
+    public function __construct(
+        MessageRepository $messageRepository,
+        ManagerLogRepository $managerLogRepository)
+    {
+        $this->messageRepository = $messageRepository;
+        $this->managerLogRepository = $managerLogRepository;
+    }
+
     //前台畫面
     public function index()
     {
-        return view('message');
+        $message = $this->messageRepository->all(); // 取得所有留言並按時間排序
+        return view('message', ['messages' => $message]);
     }
-    //顯示所有留言
-    public function lists()
-    {
-        $contents = ContentModel::orderBy('content_num','DESC')->paginate(10);     //把all content 轉成 array
 
-        return response()->json($contents);
+    //顯示所有留言
+    public function messageList(Request $request)
+    {
+        $query = $this->query($request);
+       
+        $dataTable = DataTables::of($query)
+                        ->addColumn('action', function ($row) {
+                            $id = $row->id;
+                            
+                            if(is_null($row->reply)){
+                                $replyButton = '<button class="btn btn-primary reply" data-bs-toggle="modal" data-bs-target="#replyModal" data-id="'.$row->id.'" data-user-nickname="'.$row->user_nickname.'" data-content="'.$row->content.'" data-reply="'.$row->reply.'">回覆</button>';
+                            } else {
+                                $replyButton = '<button class="btn btn-primary reply" data-bs-toggle="modal" data-bs-target="#replyModal" data-id="'.$row->id.'" data-user-nickname="'.$row->user_nickname.'" data-content="'.$row->content.'" data-reply="'.$row->reply.'">編輯回覆</button>';
+                            }
+                            $buttons = <<<HTML
+                                    {$replyButton}
+                                    <button class="btn btn-danger delete-btn" data-id="{$id}">刪除</button>
+                            HTML;
+                            return $buttons;
+                        })
+                        ->rawColumns(['action']);
+         return $dataTable->make(true);
     }
+
     //新增留言
     public function create(Request $request){
         $request -> validate([
             'nickname'=>'required',
-            'message_content'=>'required',
-            'created_at'=>Carbon::now()->toDateString(),
+            'message_content'=>'required'
         ]);
 
-        ContentModel::create([
-            'user_nickname'=>$request->nickname,
-            'content'=>$request->message_content
+        $this->messageRepository->create([
+            'user_nickname' => $request->nickname,
+            'content' => $request->message_content,
+            'created_at' => Carbon::now()->toDateTimeString(),
         ]);
+
         return redirect()->route('message.view')->with('success', '資料新增成功！');
     }
 
     //管理留言畫面
     public function contentView()
     {
-        return view('content');
+        $contents = $this->messageRepository->all(); // 取得所有留言並按時間排序
+        return view('content', ['contents' => $contents]);
     }
 
     //條件篩選留言
-    public function select(Request $request){
+    public function query(Request $request){
+
         $request->validate([
-            'start'=>'nullable|date',
-            'end'=>'nullable|date|after_or_equal:start',
-            'keyword'=>'nullable'
+            'start' => 'required|date',
+            'end' => 'required|date|after_or_equal:start',
+            'keyword' => 'nullable'
         ]);
         
-        $startTime = $request->start;
-        $endTime = $request->end;
-        $key = $request->keyword;
-        if($startTime != null &&  $endTime != null && $key != null){
-            $result = ContentModel::whereBetween('created_at',[$startTime,$endTime])
-                                    ->where('content','like',"%{$key}%")->orderBy('content_num','DESC')->paginate(10);
+        $request = $request->except('_token');
+        $end = Carbon::parse($request['end'])->endOfDay();
+        if (isset($request->keyword)) {
+            $result = $this->messageRepository->getBetweenWhere('created_at', $request['start'], $end,[['content', 'like', '%' . $request['keyword'] . '%']]);
+        } else {
+            $result = $this->messageRepository->getBetween('created_at', $request['start'], $end);
         }
-        elseif($startTime != null &&  $endTime != null){
-            $result = ContentModel::whereBetween('created_at',[$startTime,$endTime])->orderBy('content_num','DESC')->paginate(10);
-        }
-        elseif($key != null){
-            $result = ContentModel::where('content','like',"%{$key}%")->orderBy('content_num','DESC')->paginate(10);
-        }else{
-            return response()->json(['message' => '找不到該留言'], 404);
-        }
-        if($result->isEmpty()){
-            return response()->json(['message' => '查無資料'],200);
-        }
-        return response()->json($result);
+        return $result;
     }
     
     //回覆留言
     public function reply(Request $request){
-        $user = session('user');
         $request->validate([
             'content_num'=>'required',
             'reply'=>'required',
         ]);
-        $id = $request->content_num;
-        $reply = $request->reply;
-        $update = ContentModel::where('content_num',$id)->update(['reply'=>$reply]);
-        $this->addLog(Auth::user()->account,'回覆留言',$id);
-        if ($update) {
-            return response()->json($update);
-        } else {
-            return response()->json(['message' => '找不到該留言'], 404);
-        }
-    }
-    //編輯回覆
-    public function edit_reply(Request $request){
-        $user = session('user');
-        $request->validate([
-            'ed_content_num'=>'required',
-            'ed_reply'=>'required'
-        ]);
 
-        $id = $request->ed_content_num;
-        $edit = $request->ed_reply;
-        $this->addLog(Auth::user()->account,'編輯回覆',$id);
-        $update = ContentModel::where('content_num',$id)->update(['reply'=>$edit]);
-        if ($update) {
-            return response()->json($update);
-        } else {
-            return response()->json(['message' => '找不到該留言'], 404);
-        }
+        $this->messageRepository->updateById($request->content_num, ['reply' => $request->reply, 'updated_at' => Carbon::now()->toDateTimeString()]);
+
+        $this->managerLogRepository->addLog(Auth::user()->account, '回覆留言', '留言ID：'.$request->content_num.' 回覆內容：'.$request->reply);
+        return redirect()->route('message.contentView')->with('success', '回覆留言成功！');
     }
+
     //刪除留言
-    public function delete(Request $request){
-        $user = session('user');
-        $content_num = $request->input('content_num');
-           
-        $delete = ContentModel::where('content_num',$content_num)->delete();
-        $this->addLog(Auth::user()->account,'刪除留言',$content_num);
+    public function delete($id){
+        $message = $this->messageRepository->getById($id);
+        $delete = $this->messageRepository->deleteById($id);
         if($delete){
-            return response()->json(['success' => '內容已刪除']);
+            $this->managerLogRepository->addLog(Auth::user()->account, '刪除留言', '刪除留言內容：'.$message['content']);
+            return redirect()->route('message.contentView')->with('success', '內容已刪除');
         }
-        return response()->json(['error' => '找不到該內容'], 404);
-    }
-    public function addLog(string $account,string $action,int $dataNum){
-        ManagerLogModel::create([
-            'account'=>$account,
-            'action'=>$action,
-            'dataNum'=>$dataNum
-        ]);
+        return redirect()->route('message.contentView')->with('error', '刪除過程出錯，請稍後再試');
     }
 }
