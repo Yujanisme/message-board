@@ -55,9 +55,8 @@ class ManagerController extends Controller
         if($this->managerRepository->getByFirst(['account' => $request->account])){
             return redirect()->back()->withErrors(['account' => '帳號已存在']);
         } 
-
         $this->managerRepository->createManager($data);
-        // $this->addLog($user['userAccount'],'新增管理員',$newID);
+        $this->addLog(Auth::user()->account,'新增管理員', '新增管理員，帳號：'.$data['account']);
         return redirect()->route('manager.view')->with('success', '資料管理員成功！');
     }
 
@@ -85,12 +84,12 @@ class ManagerController extends Controller
             return redirect()->back()->withErrors(['old_password' => '舊密碼不正確']);
         }
         $this->managerRepository->updateManager($id, $request->only('new_password'));
+        $this->addLog(Auth::user()->account, '更改密碼', '更改密碼，帳號：'.$request->account);
         return redirect()->route('manager.view')->with('success', '更改密碼成功！');
     }
 
     //管理員頁面 刪除
     public function delete($id){
-        $managerID = $id;
         // 不能自己刪除自己
         // if($managerID != Auth::user()->manager_id){
         //     $delete = ManagerModel::where('id',$managerID)->delete();
@@ -100,7 +99,9 @@ class ManagerController extends Controller
         //     }
         //     return response()->json(['error' => '找不到該內容'], 404);
         // }
-        $this->managerRepository->deleteManager($managerID);
+        $manager = $this->managerRepository->getById($id);
+        $this->managerRepository->deleteManager($id);
+        $this->addLog(Auth::user()->account, '刪除管理員', '刪除管理，帳號：'.$manager->account);
         return redirect()->route('manager.view')->with('success', '管理員已刪除');
     }
 
@@ -120,7 +121,7 @@ class ManagerController extends Controller
             $request->session()->regenerate(); //要 regenerate才會存到auth
             session()->put('user',['userID'=>$request->id,'userAccount'=>$request->account,'userName'=>$request->manager_name]);
          
-            // $this->addLog(Auth::user()->account,'帳號登入',-1);
+            $this->addLog(Auth::user()->account,'管理員登入','登入');
             return redirect()->route('message.contentView')->with('success','登入成功');
         }
         return back()->withErrors(['login' => '帳號或密碼錯誤']);
@@ -128,17 +129,19 @@ class ManagerController extends Controller
 
     //登出
     public function logout(){
-        // $this->addLog(Auth::user()->account,'帳號登出',-1);
+        $this->addLog(Auth::user()->account,'登出','管理員登出');
         Auth::logout();
+        
         return redirect('/')->with('success','已登出');
     }
 
     //管理員操作
-    public function addLog(string $account,string $action,int $dataNum){
+    public function addLog(string $account,string $action_type,string $action){
+
         ManagerLogModel::create([
             'account'=>$account,
-            'action'=>$action,
-            'dataNum'=>$dataNum
+            'action_type'=>$action_type,
+            'action'=>$action
         ]);
     }
 }

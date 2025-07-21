@@ -97,7 +97,6 @@
 
             // 刪除管理員
             $('#managerTable').on('click', '.delete-btn',function() {
-                console.log('刪除按鈕被點擊');
                 let checkid = $(this).data('id');
                 Swal.fire({
                     title: '確定要刪除這個管理員嗎？',

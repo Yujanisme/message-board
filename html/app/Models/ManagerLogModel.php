@@ -11,5 +11,6 @@ class managerLogModel extends Model
     protected $table = 'manager_log';
     protected $primaryKey = 'id';
     protected $fillable = ['account','action_type','action'];
-    public $timestamps = true;
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = null; 
 }

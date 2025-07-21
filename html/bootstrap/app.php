@@ -11,7 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->redirectGuestsTo('/');
+        $middleware->redirectGuestsTo('/'); // auth內建沒有登入 則導至登入頁面
+        $middleware->alias([
+            'ManagerLog' => App\Http\Middleware\ManagerLog::class,
+            'UserLog' => App\Http\Middleware\UserLog::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

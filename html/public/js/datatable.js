@@ -8,12 +8,11 @@ function initDataTable(table, url, columns, options = {}) {
                 url: url,
                 type: 'GET',
                 data: function(d) {
-                if (options.extraParams) {
-                    Object.keys(options.extraParams).forEach(key => {
-                        d[key] = options.extraParams[key]();
-                    });
+                    for (const key in options) {
+                    const val = typeof options[key] === 'function' ? options[key]() : options[key];
+                    d[key] = val;
                 }
-            }
+                }
             },
             columns: columns,
             language: {

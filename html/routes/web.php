@@ -20,7 +20,7 @@ Route::get('/', [ManagerController::class, 'loginForm'])->name('login.view');
 Route::post('/login', [ManagerController::class, 'login'])->name('login.submit');
 Route::post('/logout', [ManagerController::class, 'logout'])->name('logout');
 
-Route::middleware('auth')->prefix('manager')->group(function () {
+Route::middleware(['auth','ManagerLog'])->prefix('manager')->group(function () {
     //管理員頁面
     Route::get('/', [ManagerController::class, 'manager'])->name('manager.view');
     Route::get('/managerList',[ManagerController::class,'managerList'])->name('manager.list');
@@ -36,7 +36,7 @@ Route::middleware('auth')->prefix('manager')->group(function () {
     Route::post('/deleteMessage/{id}',[MessageController::class,'delete'])->name('message.delete');
 });
 
-Route::prefix('message')->group(function () {
+Route::middleware('UserLog')->prefix('message')->group(function () {
     //前台留言頁面
     Route::get('/', [MessageController::class,'index'])->name('message.view');
     Route::get('/messageList', [MessageController::class,'messageList'])->name('message.list');

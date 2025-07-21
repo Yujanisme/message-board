@@ -19,17 +19,13 @@
     <div class="content" style="text-align: center;">
         <div id="all" style="display: block; text-align: center;" >
             <div>
-                <form id="search" method="post" action="{{ route('message.query') }}" style="display: inline-block; margin-bottom: 20px;">
-                    @csrf
-                    <label>開始時間</label>
-                    <input type="date" id="start" name="start" value="{{ request('start', date('Y-m-01')) }}">
-                    <label>結束時間</label>
-                    <input type="date" id="end" name="end" value="{{ request('end', date('Y-m-d')) }}">
-                    <label>關鍵字</label>
-                    <input type="text" id="keyword" name="keyword">
-                    <button class="btn btn-outline-dark" type="submit">搜尋</button>
-                </form>
-                <div id="pagination"></div>
+                <label>開始時間</label>
+                <input type="date" id="start" name="start" value="{{ request('start', date('Y-m-01')) }}">
+                <label>結束時間</label>
+                <input type="date" id="end" name="end" value="{{ request('end', date('Y-m-d')) }}">
+                <label>關鍵字</label>
+                <input type="text" id="keyword" name="keyword">
+                <button class="btn btn-outline-dark" type="submit" id="search">搜尋</button>
             </div>
         </div>
 
@@ -92,14 +88,24 @@
     $(document).ready(function () {
         // 留言列表
         const columns = [
-            { data: 'user_nickname' },
-            { data: 'content' },
-            { data: 'created_at' },
-            { data: 'reply' },
+            { data: 'user_nickname', name:'user_nickname'},
+            { data: 'content', data: 'content'},
+            { data: 'created_at', name: 'created_at'},
+            { data: 'reply', name: 'reply'},
             { data: 'action', orderable: false, searchable: false }
         ];
 
-        const table = initDataTable('#messages', "{{ route('message.list') }}", columns);
+        const extraParams = {
+            start: () => $('#start').val(),
+            end: () => $('#end').val(),
+            keyword: () => $('#keyword').val()
+        }
+        console.log(extraParams);
+        const table = initDataTable('#messages', "{{ route('message.list') }}", columns, extraParams);
+
+        $('#search').on('click', function(){
+            table.ajax.reload();
+        })
 
         // 回覆、編輯回覆資料
         $('#replyModal').on('show.bs.modal', function (event) {
@@ -109,14 +115,40 @@
             $('#content').text(dataInfo.data('content'));
             $('#reply').val(dataInfo.data('reply'));
         })
+
+        // 刪除留言
+        $('#messages').on('click','.delete-btn', function() {
+            let checkid = $(this).data('id');
+            console.log(123);
+            Swal.fire({
+                title: '確定要刪除這則留言嗎？',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '刪除',
+                cancelButtonText: '取消'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/manager/deleteMessage/${checkid}`,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            Swal.fire('已刪除', '', 'success');
+                            table.ajax.reload();
+                        },
+                        error: function(xhr) {
+                            Swal.fire('錯誤', '刪除失敗', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
     });
 
-    // 刪除留言
-    $('.delete-btn').on('click',function(){
-        let checkid = $(this).data('id');
-        console.log(checkid);
-    });
-
+    
     // 關掉modal時清除表單
     $('.modal').on('hidden.bs.modal', function () {
         location.reload();

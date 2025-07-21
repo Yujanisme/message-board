@@ -13,10 +13,6 @@ class ManagerRepository extends BaseRepository
      */
     protected $model;
 
-    /**
-     * @param ManagerModel $model
-     */
-    protected $repository;
    // Constructor
    public function __construct(ManagerModel $model)
    {

@@ -54,12 +54,21 @@ abstract class BaseRepository
     {
         return $this->model->where($where)->first();
     }
+    
     /**
      * get between where.
      */
     public function getBetweenWhere(string $column, $start, $end, array $where)
     {
         return $this->model->whereBetween($column, [$start, $end])->where($where)->get();
+    }
+
+    /**
+     * get betwwen
+     */
+    public function getBetween (string $column, $start, $end)
+    {
+        return $this->model->whereBetween($column, [$start, $end])->get();
     }
 
     /**

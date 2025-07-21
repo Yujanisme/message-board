@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MessageModel;
 use App\Models\ManagerLogModel;
 use App\Repositories\MessageRepository;
+use App\Repositories\ManagerLogRepository;
 use COM;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -19,9 +20,16 @@ class MessageController extends Controller
      */
     protected $messageRepository;
     
-    public function __construct(MessageRepository $messageRepository)
+    /**
+     * ManagerLogRepository
+     */
+    protected $managerLogRepository;
+    public function __construct(
+        MessageRepository $messageRepository,
+        ManagerLogRepository $managerLogRepository)
     {
         $this->messageRepository = $messageRepository;
+        $this->managerLogRepository = $managerLogRepository;
     }
 
     //前台畫面
@@ -32,9 +40,11 @@ class MessageController extends Controller
     }
 
     //顯示所有留言
-    public function messageList()
+    public function messageList(Request $request)
     {
-        $dataTable = DataTables::of(MessageModel::query())
+        $query = $this->query($request);
+       
+        $dataTable = DataTables::of($query)
                         ->addColumn('action', function ($row) {
                             $id = $row->id;
                             
@@ -78,54 +88,44 @@ class MessageController extends Controller
 
     //條件篩選留言
     public function query(Request $request){
+
         $request->validate([
             'start' => 'required|date',
             'end' => 'required|date|after_or_equal:start',
             'keyword' => 'nullable'
         ]);
-
-        $request = $request->except('_token');
         
-        $result = $this->messageRepository->getBetweenWhere('created_at', $request['start'], $request['end'],[['content', 'like', '%' . $request['keyword'] . '%']]);
-
-        return response()->json($result);
+        $request = $request->except('_token');
+        $end = Carbon::parse($request['end'])->endOfDay();
+        if (isset($request->keyword)) {
+            $result = $this->messageRepository->getBetweenWhere('created_at', $request['start'], $end,[['content', 'like', '%' . $request['keyword'] . '%']]);
+        } else {
+            $result = $this->messageRepository->getBetween('created_at', $request['start'], $end);
+        }
+        return $result;
     }
     
     //回覆留言
     public function reply(Request $request){
-        // $user = session('user');
         $request->validate([
             'content_num'=>'required',
             'reply'=>'required',
         ]);
 
         $this->messageRepository->updateById($request->content_num, ['reply' => $request->reply, 'updated_at' => Carbon::now()->toDateTimeString()]);
-        // $this->addLog(Auth::user()->account,'回覆留言',$id);
-        // if ($update) {
-        //     return response()->json($update);
-        // } else {
-        //     return response()->json(['message' => '找不到該留言'], 404);
-        // }
+
+        $this->managerLogRepository->addLog(Auth::user()->account, '回覆留言', '留言ID：'.$request->content_num.' 回覆內容：'.$request->reply);
         return redirect()->route('message.contentView')->with('success', '回覆留言成功！');
     }
 
     //刪除留言
     public function delete($id){
-        // $user = session('user');
-
+        $message = $this->messageRepository->getById($id);
         $delete = $this->messageRepository->deleteById($id);
-        // $this->addLog(Auth::user()->account,'刪除留言',$content_num);
         if($delete){
+            $this->managerLogRepository->addLog(Auth::user()->account, '刪除留言', '刪除留言內容：'.$message['content']);
             return redirect()->route('message.contentView')->with('success', '內容已刪除');
         }
         return redirect()->route('message.contentView')->with('error', '刪除過程出錯，請稍後再試');
-    }
-
-    public function addLog(string $account,string $action,int $dataNum){
-        ManagerLogModel::create([
-            'account'=>$account,
-            'action'=>$action,
-            'dataNum'=>$dataNum
-        ]);
     }
 }

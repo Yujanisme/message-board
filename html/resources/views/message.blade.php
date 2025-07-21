@@ -7,6 +7,15 @@
         <div style="text-align: center; margin: 22px;"> 
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewMessage" style="font-size:24px">我要留言</button>
         </div>
+        <div id="all" style="display: block; text-align: center;" >
+            <div>
+                <label>開始時間</label>
+                <input type="date" id="start" name="start" value="{{ request('start', date('Y-m-01')) }}">
+                <label>結束時間</label>
+                <input type="date" id="end" name="end" value="{{ request('end', date('Y-m-d')) }}">
+                <button class="btn btn-outline-dark" type="submit" id="search">搜尋</button>
+            </div>
+        </div>
         <div class="container-md">
             <h1 style="text-align: center;">留言板</h1>
             <table class="table table-striped" id="messages" ,border="1" style="margin: auto;">
@@ -59,7 +68,15 @@
             { data: 'reply' }
         ];
 
-        const table = initDataTable('#messages', "{{ route('message.list') }}", columns);
+        const extraParams = {
+            start: () => $('#start').val(),
+            end: () => $('#end').val()
+        }
+        const table = initDataTable('#messages', "{{ route('message.list') }}", columns, extraParams);
+
+        $('#search').on('click', function(){
+            table.ajax.reload();
+        })
     });
 </script>
 @endsection
