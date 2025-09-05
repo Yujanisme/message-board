@@ -34,6 +34,7 @@
             <table class="table table-striped" id="messages" ,border="1" style="margin: auto;">
                     <thead>
                         <tr>
+                            <th>序號</th>
                             <th>暱稱</th>
                             <th>留言內容</th>
                             <th>留言時間</th>
@@ -88,6 +89,7 @@
     $(document).ready(function () {
         // 留言列表
         const columns = [
+            { data: 'id'},
             { data: 'user_nickname', name:'user_nickname'},
             { data: 'content', data: 'content'},
             { data: 'created_at', name: 'created_at'},
@@ -119,7 +121,6 @@
         // 刪除留言
         $('#messages').on('click','.delete-btn', function() {
             let checkid = $(this).data('id');
-            console.log(123);
             Swal.fire({
                 title: '確定要刪除這則留言嗎？',
                 icon: 'warning',

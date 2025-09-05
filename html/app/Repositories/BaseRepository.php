@@ -60,7 +60,7 @@ abstract class BaseRepository
      */
     public function getBetweenWhere(string $column, $start, $end, array $where)
     {
-        return $this->model->whereBetween($column, [$start, $end])->where($where)->get();
+        return $this->model->whereBetween($column, [$start, $end])->where($where)->orderBy('id', 'DESC')->get();
     }
 
     /**
@@ -68,7 +68,7 @@ abstract class BaseRepository
      */
     public function getBetween (string $column, $start, $end)
     {
-        return $this->model->whereBetween($column, [$start, $end])->get();
+        return $this->model->whereBetween($column, [$start, $end])->orderBy('id', 'DESC')->get();
     }
 
     /**

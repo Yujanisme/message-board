@@ -43,7 +43,7 @@ class MessageController extends Controller
     public function messageList(Request $request)
     {
         $query = $this->query($request);
-       
+        
         $dataTable = DataTables::of($query)
                         ->addColumn('action', function ($row) {
                             $id = $row->id;

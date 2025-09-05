@@ -4,6 +4,7 @@ function initDataTable(table, url, columns, options = {}) {
             serverSide: true,
             searching: false,
             destroy: true ,
+            order: [[ 2, 'desc' ]], 
             ajax: {
                 url: url,
                 type: 'GET',

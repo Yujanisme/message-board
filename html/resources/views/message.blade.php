@@ -21,6 +21,7 @@
             <table class="table table-striped" id="messages" ,border="1" style="margin: auto;">
                     <thead>
                         <tr>
+                            <th>序號</th>
                             <th>暱稱</th>
                             <th>留言內容</th>
                             <th>留言時間</th>
@@ -62,10 +63,11 @@
 <script>
     $(document).ready(function(){
         const columns = [
-            { data: 'user_nickname' },
-            { data: 'content' },
-            { data: 'created_at' },
-            { data: 'reply' }
+            { data: 'id', name: 'id'},
+            { data: 'user_nickname' ,data: 'user_nickname'},
+            { data: 'content', data: 'content'},
+            { data: 'created_at', data: 'created_at'},
+            { data: 'reply',data: 'created_at'}
         ];
 
         const extraParams = {
